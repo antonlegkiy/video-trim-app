@@ -20,6 +20,15 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {}
 
+  getVideoTiming(type) {
+    switch (type) {
+      case 'sec':
+        return this.duration;
+      case 'min':
+        return Math.floor(this.duration / 60);
+    }
+  }
+
   onFileSelected(event) {
     this.selectedFile = event.target.files[0];
     this.selectedFileName = this.selectedFile.name;

@@ -5,3 +5,23 @@
 .sbm {
   margin-top: 20px;
 }
+
+.options {
+  margin-top: 10px;
+}
+
+.options h4 {
+  background: aliceblue;
+}
+
+.inputs-row .input-left {
+  padding-left: 0;
+}
+
+.inputs-row .input-right {
+  padding-right: 0;
+}
+
+.input-block {
+  padding-top: 20px;
+}

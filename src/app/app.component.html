@@ -1,45 +1,92 @@
 <div class="container">
   <div class="row">
-    <div class="col-md-offset-4 col-md-4">
+    <div class="col-md-offset-4 col-md-4 text-center">
       <h1>...Video Trim...</h1>
     </div>
   </div>
 
-  <div class="row">
+  <div class="row" style="margin-top: 2em">
     <div class="col-md-offset-4 col-md-4">
       <label class="btn btn-default">
         Upload File
-        <input type="file" name="file" hidden (change)="onFileSelected($event)">
+        <input type="file"
+               name="file"
+               hidden
+               (change)="onFileSelected($event)">
       </label>
       <span *ngIf="selectedFile">{{selectedFile.name}}</span>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-md-offset-4 col-md-4">
-      <label for="from">From (sec or min)</label>
-      <select [(ngModel)]="timing.from.type" class="form-control">
-        <option value="sec">seconds</option>
-        <option value="min">minutes</option>
-      </select>
-      <input type="number" id="from" class="form-control" [(ngModel)]="timing.from.value">
-    </div>
+  <div class="col-md-offset-4 col-md-4 options" *ngIf="selectedFile">
+    <h4>Video duration is: {{ getVideoTiming('sec') }} sec
+      <span *ngIf="getVideoTiming('min') > 0">or {{ getVideoTiming('min') }} min</span>
+    </h4>
   </div>
 
-  <div class="row">
-    <div class="col-md-offset-4 col-md-4">
-      <label for="duration">Duration (sec or min)</label>
-      <select [(ngModel)]="timing.duration.type" class="form-control">
-        <option value="sec">seconds</option>
-        <option value="min">minutes</option>
-      </select>
-      <input type="number" id="duration" class="form-control" [(ngModel)]="timing.duration.value">
+  <div class="options" *ngIf="selectedFile">
+    <div class="row input-block">
+      <div class="col-md-offset-4 col-md-4">
+        <label for="from">From (seconds or minutes)</label>
+        <div class="row inputs-row">
+          <div class="col-md-12">
+            <div class="col-md-6 input-left">
+              <input type="number"
+                     maxlength="duration"
+                     id="from"
+                     class="form-control"
+                     [(ngModel)]="timing.from.value">
+            </div>
+            <div class="col-md-6 input-right">
+              <select [(ngModel)]="timing.from.type"
+                      class="form-control"
+                      *ngIf="getVideoTiming('min') > 0;else lessThanMin">
+                <option value="sec">seconds</option>
+                <option value="min">minutes</option>
+              </select>
+              <ng-template #lessThanMin>
+                <span style="font-size: 22px;">Seconds</span>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row input-block">
+      <div class="col-md-offset-4 col-md-4">
+        <label for="duration">Duration (seconds or minutes)</label>
+        <div class="row inputs-row">
+          <div class="col-md-12">
+            <div class="col-md-6 input-left">
+              <input type="number"
+                     maxlength="duration"
+                     id="duration"
+                     class="form-control"
+                     [(ngModel)]="timing.duration.value">
+            </div>
+            <div class="col-md-6 input-right">
+              <select [(ngModel)]="timing.duration.type"
+                      class="form-control"
+                      *ngIf="getVideoTiming('min') > 0;else lessThanMin">
+                <option value="sec">seconds</option>
+                <option value="min">minutes</option>
+              </select>
+              <ng-template #lessThanMin>
+                <span style="font-size: 22px;">Seconds</span>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="row sbm">
     <div class="col-md-offset-4 col-md-4">
-      <button type="button" class="btn btn-warning form-control" (click)="onUploadFile()">Submit</button>
+      <button type="button"
+              class="btn btn-warning form-control"
+              (click)="onUploadFile()">Submit</button>
     </div>
   </div>
 </div>
