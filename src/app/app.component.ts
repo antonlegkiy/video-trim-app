@@ -12,6 +12,8 @@ export class AppComponent implements OnInit {
   duration: number;
   selectedFile = null;
   selectedFileName: string;
+  videoUploadedSuccessful = false;
+  uploadedVideo: any;
   fieldError = { type: '', message: '' };
   timing = {
     from: { type: 'sec', value: null },
@@ -49,9 +51,30 @@ export class AppComponent implements OnInit {
   onUploadFile() {
     const validation = this.appService.validate(this.duration, this.timing);
     if (validation.type === 'valid') {
-      this.appService.upload(this.selectedFile, this.timing);
+      this.appService.upload(this.selectedFile, this.timing)
+        .subscribe(
+        data => {
+          console.log(data);
+          this.uploadedVideo = data;
+          this.videoUploadedSuccessful = true;
+        },
+        error => {
+          alert('failed to upload');
+        }
+      );
     } else {
       this.fieldError = validation;
     }
+  }
+
+  onDownload() {
+    this.appService.download({
+      filename: this.uploadedVideo.file.filename,
+      mime: this.uploadedVideo.file.contentType}, this.timing);
+  }
+
+  onRestart() {
+    this.uploadedVideo = {};
+    this.videoUploadedSuccessful = false;
   }
 }

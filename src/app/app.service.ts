@@ -1,5 +1,6 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
+import * as FileSaver from 'file-saver';
 
 @Injectable()
 export class AppService {
@@ -10,24 +11,33 @@ export class AppService {
   };
   constructor(private http: HttpClient) {}
 
+  private downloadFile(data, mime) {
+    const blob = new Blob([data], { type: mime });
+    FileSaver.saveAs(blob, `cutted-video.mp4`);
+  }
+
   upload(file, timing) {
     const formData: FormData = new FormData();
     formData.append('file', file, file.name);
 
+    return this.http.post(`/upload`, formData);
+  }
+
+  download(file, timing) {
     const params = new HttpParams()
+      .append('filename', file.filename)
       .append('from', timing.from.type === 'min' ? timing.from.value * 60 : timing.from.value)
       .append('duration', timing.duration.type === 'min' ? timing.duration.value * 60 : timing.duration.value);
-    const options = { params: params };
 
-    this.http.post(`/upload`, formData, options)
-      .subscribe(
-        data => {
-          console.log(data);
-        },
-        error => {
-          alert('failed to upload');
-        }
-      );
+    return this.http.get(`/download`, { responseType: 'blob', params: params }).subscribe((data) => {
+      this.downloadFile(data, file.mime);
+    },
+    error => {
+      console.log(error);
+      },
+      () => {
+      console.log('done');
+      });
   }
 
   validate(duration, timing) {

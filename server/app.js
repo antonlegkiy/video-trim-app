@@ -64,8 +64,8 @@ app.get('/', function(req, res) {
   res.sendFile('index.html', { root: staticRoot });
 });
 
-app.get('/download/:filename', (req, res) => {
-  gfs.files.findOne({filename: req.params.filename}, (error, file) => {
+app.get('/download', (req, res) => {
+  gfs.files.findOne({filename: req.query.filename}, (error, file) => {
     if (!file || file.length === 0) {
       return res.status(404).json({
         error: 'No file exists'
@@ -76,8 +76,8 @@ app.get('/download/:filename', (req, res) => {
 
     let promise = new Promise((resolve, reject) => {
       new ffmpeg({ source: readstream })
-        .setStartTime('00:00:30')
-        .setDuration(8)
+        .setStartTime(req.query.from)
+        .setDuration(req.query.duration)
         .on('progress', function(progress) {
           console.log('progress ', progress.percent);
         })
@@ -113,7 +113,6 @@ app.get('/download/:filename', (req, res) => {
 });
 
 app.post('/upload', upload.single('file'), (req, res) => {
-  console.log(req.query);
   res.json({file: req.file});
 });
 
