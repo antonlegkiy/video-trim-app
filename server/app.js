@@ -6,6 +6,8 @@ const GridFsStorage = require('multer-gridfs-storage');
 const Grid = require('gridfs-stream');
 const path = require('path');
 const crypto = require('crypto');
+const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs');
 
 const config = require('./config/config');
 const app = express();
@@ -18,7 +20,7 @@ const options = {
 
 app.use(bodyParser.raw(options));
 
-app.use((req, res, next) => { //allow cross origin requests
+app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -60,6 +62,59 @@ const staticRoot = path.resolve(__dirname, '../dist');
 app.use(express.static(staticRoot));
 app.get('/', function(req, res) {
   res.sendFile('index.html', { root: staticRoot });
+});
+
+app.get('/download/:filename', (req, res) => {
+  gfs.files.findOne({filename: req.params.filename}, (error, file) => {
+    if (!file || file.length === 0) {
+      return res.status(404).json({
+        error: 'No file exists'
+      });
+    }
+
+    const readstream = gfs.createReadStream(file.filename);
+
+    let promise = new Promise((resolve, reject) => {
+      new ffmpeg({ source: readstream })
+        .setStartTime('00:00:30')
+        .setDuration(8)
+        .on('progress', function(progress) {
+          console.log('progress ', progress.percent);
+        })
+        .on('end', function() {
+          console.log('done processing input stream');
+          resolve();
+        })
+        .on('error', function(err) {
+          console.log('an error happened: ' + err.message);
+          reject();
+        })
+        .saveToFile(file.filename);
+    });
+
+    promise.then(() => {
+      const filename = `${__dirname} + '/../${file.filename}`;
+
+      // This line opens the file as a readable stream
+      let readStream = fs.createReadStream(filename);
+
+      // This will wait until we know the readable stream is actually valid before piping
+      readStream.on('open', function () {
+        // This just pipes the read stream to the response object (which goes to the client)
+        readStream.pipe(res);
+      })
+        .on('end', () => {
+          fs.unlink(filename, (err) => {
+            if (err) throw err;
+          });
+        });
+    })
+  });
+});
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  console.log(req.query);
+  res.json({file: req.file});
 });
 
 app.listen(config.dev.port, () => {
