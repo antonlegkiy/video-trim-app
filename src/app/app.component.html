@@ -15,6 +15,28 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="col-md-offset-4 col-md-4">
+      <label for="from">From (sec or min)</label>
+      <select [(ngModel)]="timing.from.type" class="form-control">
+        <option value="sec">seconds</option>
+        <option value="min">minutes</option>
+      </select>
+      <input type="number" id="from" class="form-control" [(ngModel)]="timing.from.value">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-offset-4 col-md-4">
+      <label for="duration">Duration (sec or min)</label>
+      <select [(ngModel)]="timing.duration.type" class="form-control">
+        <option value="sec">seconds</option>
+        <option value="min">minutes</option>
+      </select>
+      <input type="number" id="duration" class="form-control" [(ngModel)]="timing.duration.value">
+    </div>
+  </div>
+
   <div class="row sbm">
     <div class="col-md-offset-4 col-md-4">
       <button type="button" class="btn btn-warning form-control" (click)="onUploadFile()">Submit</button>
