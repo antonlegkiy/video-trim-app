@@ -50,6 +50,7 @@
             </div>
           </div>
         </div>
+        <span class="help-block" *ngIf="fieldError.type === 'from'">{{ fieldError.message }}</span>
       </div>
     </div>
 
@@ -78,6 +79,7 @@
             </div>
           </div>
         </div>
+        <span class="help-block" *ngIf="fieldError.type === 'duration'">{{ fieldError.message }}</span>
       </div>
     </div>
   </div>

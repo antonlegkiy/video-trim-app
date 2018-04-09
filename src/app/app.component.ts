@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import {HttpClient, HttpParams} from '@angular/common/http';
 import 'rxjs/operators/map';
+
+import {AppService} from './app.service';
 
 @Component({
   selector: 'app-root',
@@ -11,19 +12,20 @@ export class AppComponent implements OnInit {
   duration: number;
   selectedFile = null;
   selectedFileName: string;
+  fieldError = { type: '', message: '' };
   timing = {
     from: { type: 'sec', value: null },
     duration: { type: 'sec', value: null }
   };
 
-  constructor(private http: HttpClient) {}
+  constructor(private appService: AppService) {}
 
   ngOnInit() {}
 
   getVideoTiming(type) {
     switch (type) {
       case 'sec':
-        return this.duration;
+        return Math.floor(this.duration);
       case 'min':
         return Math.floor(this.duration / 60);
     }
@@ -45,22 +47,11 @@ export class AppComponent implements OnInit {
   }
 
   onUploadFile() {
-    const formData: FormData = new FormData();
-    formData.append('file', this.selectedFile, this.selectedFile.name);
-
-    const params = new HttpParams()
-      .append('from', this.timing.from.type === 'min' ? this.timing.from.value * 60 : this.timing.from.value)
-      .append('duration', this.timing.duration.type === 'min' ? this.timing.duration.value * 60 : this.timing.duration.value);
-    const options = { params: params };
-
-    this.http.post(`/upload`, formData, options)
-      .subscribe(
-        data => {
-          console.log(data);
-        },
-        error => {
-          alert('failed to upload');
-        }
-      );
+    const validation = this.appService.validate(this.duration, this.timing);
+    if (validation.type === 'valid') {
+      this.appService.upload(this.selectedFile, this.timing);
+    } else {
+      this.fieldError = validation;
+    }
   }
 }
