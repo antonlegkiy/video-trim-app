@@ -29,18 +29,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(function(req, res){
-  res.status(404);
-  log.debug('Not found URL: %s', req.url);
-  res.send({ error: 'Not found' });
-});
-
-app.use(function(err, req, res){
-  res.status(err.status || 500);
-  log.error('Internal error(%d): %s', res.statusCode, err.message);
-  res.send({ error: err.message });
-});
-
 Grid.mongo = mongoose.mongo;
 let gfs;
 
@@ -93,7 +81,9 @@ app.get('/download', (req, res) => {
         .setStartTime(req.query.from)
         .setDuration(req.query.duration)
         .on('progress', function(progress) {
-          log.info('progress ', progress.percent);
+          let currentTimeMarkSec = progress.timemark.split(':').reverse().reduce((prev, curr, i) => prev + curr * Math.pow(60, i), 0);
+          let percent = (100 * currentTimeMarkSec)/req.query.duration;
+          log.info('progress:', `${Math.round(percent)}% done`);
         })
         .on('end', function() {
           log.info('done processing input stream');
@@ -127,6 +117,18 @@ app.get('/download', (req, res) => {
 
 app.post('/upload', upload.single('file'), (req, res) => {
   res.json({file: req.file});
+});
+
+app.use(function(req, res){
+  res.status(404);
+  log.debug('Not found URL: %s', req.url);
+  res.send({ error: 'Not found' });
+});
+
+app.use(function(err, req, res){
+  res.status(err.status || 500);
+  log.error('Internal error(%d): %s', res.statusCode, err.message);
+  res.send({ error: err.message });
 });
 
 app.listen(config.dev.port, () => {
