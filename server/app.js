@@ -10,7 +10,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 
 const config = require('./config/config');
-const log = require('./libs/log')(module);
+const log = require('./log/logger')(module);
 const app = express();
 
 const options = {
