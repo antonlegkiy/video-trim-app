@@ -10,6 +10,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 
 const config = require('./config/config');
+const log = require('./libs/log')(module);
 const app = express();
 
 const options = {
@@ -22,10 +23,22 @@ app.use(bodyParser.raw(options));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Origin", "http://localhost:4200");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Credentials", true);
   next();
+});
+
+app.use(function(req, res){
+  res.status(404);
+  log.debug('Not found URL: %s', req.url);
+  res.send({ error: 'Not found' });
+});
+
+app.use(function(err, req, res){
+  res.status(err.status || 500);
+  log.error('Internal error(%d): %s', res.statusCode, err.message);
+  res.send({ error: err.message });
 });
 
 Grid.mongo = mongoose.mongo;
@@ -67,6 +80,7 @@ app.get('/', function(req, res) {
 app.get('/download', (req, res) => {
   gfs.files.findOne({filename: req.query.filename}, (error, file) => {
     if (!file || file.length === 0) {
+      log.error('Error while download: %s', res.statusCode, error.message);
       return res.status(404).json({
         error: 'No file exists'
       });
@@ -79,14 +93,14 @@ app.get('/download', (req, res) => {
         .setStartTime(req.query.from)
         .setDuration(req.query.duration)
         .on('progress', function(progress) {
-          console.log('progress ', progress.percent);
+          log.info('progress ', progress.percent);
         })
         .on('end', function() {
-          console.log('done processing input stream');
+          log.info('done processing input stream');
           resolve();
         })
         .on('error', function(err) {
-          console.log('an error happened: ' + err.message);
+          log.error('Error while trim video: %s' + err.message);
           reject();
         })
         .saveToFile(file.filename);
@@ -94,21 +108,20 @@ app.get('/download', (req, res) => {
 
     promise.then(() => {
       const filename = `${__dirname} + '/../${file.filename}`;
-
-      // This line opens the file as a readable stream
       let readStream = fs.createReadStream(filename);
 
-      // This will wait until we know the readable stream is actually valid before piping
       readStream.on('open', function () {
-        // This just pipes the read stream to the response object (which goes to the client)
         readStream.pipe(res);
       })
         .on('end', () => {
           fs.unlink(filename, (err) => {
-            if (err) throw err;
+            if (err) {
+              log.error('An error happened while unlink: %s' + err);
+              throw err
+            }
           });
         });
-    })
+    });
   });
 });
 
@@ -117,5 +130,5 @@ app.post('/upload', upload.single('file'), (req, res) => {
 });
 
 app.listen(config.dev.port, () => {
-  console.log(`Running on ${config.dev.port}`);
+  log.info(`Running on ${config.dev.port}`);
 });
