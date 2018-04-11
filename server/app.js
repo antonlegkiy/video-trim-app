@@ -91,26 +91,38 @@ app.get('/download', (req, res) => {
         })
         .on('error', function(err) {
           log.error('Error while trim video: %s' + err.message);
-          reject();
+          resolve('error');
         })
         .saveToFile(file.filename);
     });
 
-    promise.then(() => {
-      const filename = `${__dirname} + '/../${file.filename}`;
-      let readStream = fs.createReadStream(filename);
+    let unlink = (name) => {
+      fs.unlink(name, (err) => {
+        if (err) {
+          log.error('An error happened while unlink: %s' + err);
+          throw err
+        }
+      });
+    };
 
-      readStream.on('open', function () {
-        readStream.pipe(res);
-      })
-        .on('end', () => {
-          fs.unlink(filename, (err) => {
-            if (err) {
-              log.error('An error happened while unlink: %s' + err);
-              throw err
-            }
+    promise.then((result) => {
+      const filename = `${__dirname} + '/../${file.filename}`;
+
+      if (result !== 'error') {
+        let readStream = fs.createReadStream(filename);
+
+        readStream.on('open', function () {
+          readStream.pipe(res);
+        })
+          .on('end', () => {
+            unlink(filename);
           });
-        });
+      } else {
+        readstream.pause();
+        readstream.unpipe();
+        unlink(filename);
+        res.status(500).send({ error: 'Error while trim video' });
+      }
     });
   });
 });

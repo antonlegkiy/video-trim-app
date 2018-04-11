@@ -11,9 +11,9 @@ export class AppService {
   };
   constructor(private http: HttpClient) {}
 
-  private downloadFile(data, mime) {
+  downloadFile(data, mime, name) {
     const blob = new Blob([data], { type: mime });
-    FileSaver.saveAs(blob, `cutted-video.mp4`);
+    FileSaver.saveAs(blob, name);
   }
 
   upload(file, timing) {
@@ -29,15 +29,7 @@ export class AppService {
       .append('from', timing.from.type === 'min' ? timing.from.value * 60 : timing.from.value)
       .append('duration', timing.duration.type === 'min' ? timing.duration.value * 60 : timing.duration.value);
 
-    return this.http.get(`/download`, { responseType: 'blob', params: params }).subscribe((data) => {
-      this.downloadFile(data, file.mime);
-    },
-    error => {
-      console.log(error);
-      },
-      () => {
-      console.log('done');
-      });
+    return this.http.get(`/download`, { responseType: 'blob', params: params });
   }
 
   validate(duration, timing) {

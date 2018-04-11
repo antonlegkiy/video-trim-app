@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" [ngClass]="{'spinner-background': spinner}">
   <div class="row">
     <div class="col-md-offset-4 col-md-4 text-center">
       <h1>...Video Trim...</h1>
@@ -95,7 +95,7 @@
   </div>
 
   <ng-template #videoUploaded>
-    <div class="col-md-offset-4 col-md-4">
+    <div class="col-md-offset-4 col-md-4 text-center">
       <h3>
         <a style="cursor:pointer;" (click)="onDownload()">Download</a>
       </h3>
@@ -105,4 +105,13 @@
       </span>
     </div>
   </ng-template>
+</div>
+
+<div class="col-md-offset-4 col-md-4 text-center">
+  <span class="error-msg">{{ errorMsg }}</span>
+</div>
+
+<div class="spinner" *ngIf="spinner">
+  <div class="dot1"></div>
+  <div class="dot2"></div>
 </div>

@@ -9,6 +9,8 @@ import {AppService} from './app.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
+  spinner = false;
+  errorMsg: string;
   duration: number;
   selectedFile = null;
   selectedFileName: string;
@@ -51,15 +53,17 @@ export class AppComponent implements OnInit {
   onUploadFile() {
     const validation = this.appService.validate(this.duration, this.timing);
     if (validation.type === 'valid') {
+      this.spinner = true;
       this.appService.upload(this.selectedFile, this.timing)
         .subscribe(
         data => {
-          console.log(data);
           this.uploadedVideo = data;
           this.videoUploadedSuccessful = true;
+          this.spinner = false;
         },
         error => {
-          alert('failed to upload');
+          this.errorMsg = error.message;
+          console.error('failed to upload', error);
         }
       );
     } else {
@@ -68,13 +72,27 @@ export class AppComponent implements OnInit {
   }
 
   onDownload() {
+    this.spinner = true;
     this.appService.download({
       filename: this.uploadedVideo.file.filename,
-      mime: this.uploadedVideo.file.contentType}, this.timing);
+      mime: this.uploadedVideo.file.contentType}, this.timing)
+      .subscribe((data) => {
+          this.appService.downloadFile(data, this.uploadedVideo.file.contentType , this.uploadedVideo.file.filename);
+      },
+      error => {
+        this.spinner = false;
+        this.errorMsg = error.message;
+        console.log('failed to download', error);
+      },
+      () => {
+        this.spinner = false;
+        console.log('done');
+      });
   }
 
   onRestart() {
     this.uploadedVideo = {};
     this.videoUploadedSuccessful = false;
+    this.errorMsg = '';
   }
 }
