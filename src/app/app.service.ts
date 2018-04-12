@@ -32,6 +32,10 @@ export class AppService {
     return this.http.get(`/download`, { responseType: 'blob', params: params });
   }
 
+  getToken() {
+    return this.http.get(`/token`);
+  }
+
   validate(duration, timing) {
     const errorMsg = { message: '', type: '' };
     const fromVal = timing.from.value;

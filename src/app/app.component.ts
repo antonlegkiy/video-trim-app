@@ -24,7 +24,11 @@ export class AppComponent implements OnInit {
 
   constructor(private appService: AppService) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.appService.getToken().subscribe(() => {
+      console.log(`user initialized`);
+    });
+  }
 
   getVideoTiming(type) {
     switch (type) {

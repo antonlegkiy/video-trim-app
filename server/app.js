@@ -1,3 +1,4 @@
+const cookieSession = require('cookie-session');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -18,8 +19,18 @@ const options = {
   limit: '100mb',
   type: 'application/octet-stream'
 };
+const key = Math.random().toString(36).substr(2);
+
+app.set('trust proxy', 1);
 
 app.use(bodyParser.raw(options));
+
+app.use(cookieSession({
+  secret: key,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
@@ -61,14 +72,25 @@ const upload = multer({ storage });
 const staticRoot = path.resolve(__dirname, '../dist');
 
 app.use(express.static(staticRoot));
-app.get('/', function(req, res) {
+
+app.get('/', (req, res) => {
   res.sendFile('index.html', { root: staticRoot });
 });
 
+app.get('/token', (req, res) => {
+  if (!req.session.token) {
+    req.session.token = Math.random().toString(36).substr(2);
+    log.info(`[${req.session.token}] Session token is sets successful`);
+  } else {
+    log.info(`[${req.session.token}] User token is already set`);
+  }
+  res.send(true);
+});
+
 app.get('/download', (req, res) => {
-  gfs.files.findOne({filename: req.query.filename}, (error, file) => {
+  gfs.files.findOne({ filename: req.query.filename }, (error, file) => {
     if (!file || file.length === 0) {
-      log.error('Error while download: %s', res.statusCode, error.message);
+      log.error(`[${req.session.token}] Error while download:`, res.statusCode, error.message);
       return res.status(404).json({
         error: 'No file exists'
       });
@@ -80,17 +102,17 @@ app.get('/download', (req, res) => {
       new ffmpeg({ source: readstream })
         .setStartTime(req.query.from)
         .setDuration(req.query.duration)
-        .on('progress', function(progress) {
+        .on('progress', (progress) => {
           let currentTimeMarkSec = progress.timemark.split(':').reverse().reduce((prev, curr, i) => prev + curr * Math.pow(60, i), 0);
           let percent = (100 * currentTimeMarkSec)/req.query.duration;
-          log.info('progress:', `${Math.round(percent)}% done`);
+          log.info(`[${req.session.token}] progress:`, `${Math.round(percent)}% done`);
         })
-        .on('end', function() {
-          log.info('done processing input stream');
+        .on('end', () => {
+          log.info(`[${req.session.token}] done processing input stream`);
           resolve();
         })
-        .on('error', function(err) {
-          log.error('Error while trim video: %s' + err.message);
+        .on('error', (err) => {
+          log.error(`Error while trim video: ${err.message}`);
           resolve('error');
         })
         .saveToFile(file.filename);
@@ -99,7 +121,7 @@ app.get('/download', (req, res) => {
     let unlink = (name) => {
       fs.unlink(name, (err) => {
         if (err) {
-          log.error('An error happened while unlink: %s' + err);
+          log.error(`An error happened while unlink: ${err}`);
           throw err
         }
       });
@@ -111,7 +133,7 @@ app.get('/download', (req, res) => {
       if (result !== 'error') {
         let readStream = fs.createReadStream(filename);
 
-        readStream.on('open', function () {
+        readStream.on('open', () => {
           readStream.pipe(res);
         })
           .on('end', () => {
@@ -128,16 +150,17 @@ app.get('/download', (req, res) => {
 });
 
 app.post('/upload', upload.single('file'), (req, res) => {
+  log.info(`[${req.session.token}] file was uploaded successful`);
   res.json({file: req.file});
 });
 
-app.use(function(req, res){
+app.use((req, res) => {
   res.status(404);
   log.debug('Not found URL: %s', req.url);
   res.send({ error: 'Not found' });
 });
 
-app.use(function(err, req, res){
+app.use((err, req, res) => {
   res.status(err.status || 500);
   log.error('Internal error(%d): %s', res.statusCode, err.message);
   res.send({ error: err.message });
