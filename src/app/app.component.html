@@ -19,13 +19,13 @@
       </div>
     </div>
 
-    <div class="col-md-offset-4 col-md-4 options" *ngIf="selectedFile">
+    <div class="col-md-offset-4 col-md-4 options" *ngIf="selectedFile && fieldError.type !== 'extension'">
       <h4>Video duration is: {{ getVideoTiming('sec') }} sec
         <span *ngIf="getVideoTiming('min') > 0">or {{ getVideoTiming('min') }} min</span>
       </h4>
     </div>
 
-    <div class="options" *ngIf="selectedFile">
+    <div class="options" *ngIf="selectedFile && fieldError.type !== 'extension'">
       <div class="row input-block">
         <div class="col-md-offset-4 col-md-4">
           <label for="from">From (seconds or minutes)</label>
@@ -82,6 +82,14 @@
           </div>
           <span class="help-block" *ngIf="fieldError.type === 'duration'">{{ fieldError.message }}</span>
         </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-offset-4 col-md-4">
+            <span class="help-block" *ngIf="['extension', 'empty'].indexOf(fieldError.type) > -1">
+      {{ fieldError.message }}
+    </span>
       </div>
     </div>
 

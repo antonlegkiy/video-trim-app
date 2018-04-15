@@ -36,7 +36,18 @@ export class AppService {
     return this.http.get(`/token`);
   }
 
-  validate(duration, timing) {
+  verifyExtension (sFileNameForCheck) {
+    const aAvailableFileExtensions = ['mp4', 'avi', 'mkv', 'm4p ', 'm4v', 'webm', 'flv', 'mov', 'qt', 'wmv', 'mpg', 'mpeg', '3gp'];
+
+    for (let i = 0; i < aAvailableFileExtensions.length; i++) {
+      if (sFileNameForCheck.type.indexOf(aAvailableFileExtensions[i]) > -1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  validate(duration, timing, file) {
     const errorMsg = { message: '', type: '' };
     const fromVal = timing.from.value;
     const durVal = timing.duration.value;

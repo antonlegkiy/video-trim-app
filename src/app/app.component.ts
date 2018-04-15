@@ -42,20 +42,26 @@ export class AppComponent implements OnInit {
   onFileSelected(event) {
     this.selectedFile = event.target.files[0];
     this.selectedFileName = this.selectedFile.name;
+    if (this.appService.verifyExtension(this.selectedFile)) {
+      this.fieldError = { type: '', message: '' };
 
-    const video = document.createElement('video');
-    video.preload = 'metadata';
+      const video = document.createElement('video');
+      video.preload = 'metadata';
 
-    video.onloadedmetadata = () => {
-      this.duration = video.duration;
-    };
+      video.onloadedmetadata = () => {
+        this.duration = video.duration;
+      };
 
-    const selectedVID = event.target.files[0];
-    video.src = URL.createObjectURL(selectedVID);
+      const selectedVID = event.target.files[0];
+      video.src = URL.createObjectURL(selectedVID);
+    } else {
+      this.fieldError.type = 'extension';
+      this.fieldError.message = 'please upload video file';
+    }
   }
 
   onUploadFile() {
-    const validation = this.appService.validate(this.duration, this.timing);
+    const validation = this.appService.validate(this.duration, this.timing, this.selectedFile);
     if (validation.type === 'valid') {
       this.spinner = true;
       this.appService.upload(this.selectedFile, this.timing)
